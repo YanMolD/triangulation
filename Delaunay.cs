@@ -22,7 +22,6 @@ namespace triangle
             var tri1 = new Triangle(point0, point1, point2);
             var tri2 = new Triangle(point0, point2, point3);
             MCS = new List<Triangle>() { tri1, tri2 };
-
             var random = new Random();
             for (int i = 0; i < amount - 4; i++)
             {
@@ -30,12 +29,20 @@ namespace triangle
                 var pointY = random.NextDouble() * MaxY;
                 points.Add(new Point(pointX, pointY));
             }
-
             return points;
         }
 
-        public IEnumerable<Triangle> BowyerWatson(IEnumerable<Point> points)// метод Боуэра-Ватсона
+        public IEnumerable<Triangle> BowyerWatson(IEnumerable<Point> points, int maxY, double maxX)// метод Боуэра-Ватсона
         {
+            MaxX = maxX;
+            MaxY = maxY;
+            var point0 = new Point(0, 0);
+            var point1 = new Point(0, MaxY - 1);
+            var point2 = new Point(MaxX - 1, MaxY - 1);
+            var point3 = new Point(MaxX - 1, 0);
+            var tri1 = new Triangle(point0, point1, point2);
+            var tri2 = new Triangle(point0, point2, point3);
+            MCS = new List<Triangle>() { tri1, tri2 };
             var triangulation = new HashSet<Triangle>(MCS);
 
             foreach (var point in points)
