@@ -12,5 +12,16 @@ namespace triangle
             X = x;
             Y = y;
         }
+        public Point(Point point)
+        {
+            X = point.X;
+            Y = point.Y;
+        }
+        public bool Compare(Point point)
+        {
+            if (point.X == X && point.Y == Y)
+                return true;
+            return false;
+        }
     }
 }

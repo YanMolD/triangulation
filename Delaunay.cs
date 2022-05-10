@@ -10,7 +10,7 @@ namespace triangle
         private double MaxY { get; set; }
         private IEnumerable<Triangle> MCS;//минимальная выпуклая оболочка
 
-        public IEnumerable<Point> GenP(int amount, double maxX, double maxY)// генерация точек
+        public List<Point> GenP(int amount, double maxX, double maxY)// генерация точек
         {
             MaxX = maxX;
             MaxY = maxY;
@@ -25,9 +25,10 @@ namespace triangle
             var random = new Random();
             for (int i = 0; i < amount - 4; i++)
             {
-                var pointX = random.NextDouble() * MaxX;
-                var pointY = random.NextDouble() * MaxY;
-                points.Add(new Point(pointX, pointY));
+                var pointX = random.NextDouble() * (MaxX);
+                var pointY = random.NextDouble() * (MaxY);
+                if (pointX != 0 && pointY != 0)
+                    points.Add(new Point(pointX, pointY));
             }
             return points;
         }
@@ -36,10 +37,11 @@ namespace triangle
         {
             MaxX = maxX;
             MaxY = maxY;
+            points = GenP(10000, maxX, maxY);
             var point0 = new Point(0, 0);
-            var point1 = new Point(0, MaxY - 1);
-            var point2 = new Point(MaxX - 1, MaxY - 1);
-            var point3 = new Point(MaxX - 1, 0);
+            var point1 = new Point(0, MaxY);
+            var point2 = new Point(MaxX, MaxY);
+            var point3 = new Point(MaxX, 0);
             var tri1 = new Triangle(point0, point1, point2);
             var tri2 = new Triangle(point0, point2, point3);
             MCS = new List<Triangle>() { tri1, tri2 };

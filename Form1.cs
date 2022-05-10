@@ -19,143 +19,228 @@ namespace triangle
     {
         private DelaunayTriangulator delaunay = new DelaunayTriangulator();
         List<Point> points=new List<Point>();
+        List<Point> Dots= new List<Point>();
         public Form1()
         {
             InitializeComponent();
-            
-            
         }
         
         private void pictureBox1_Click(object sender, EventArgs e)
         {
+            Graphics gr = pictureBox2.CreateGraphics();
+            for (int i = 0; i < Dots.Count; i++)
+                gr.DrawEllipse(new Pen(Color.Violet, 3), Convert.ToInt32(Dots[i].X), Convert.ToInt32(Dots[i].Y), 3, 3);
             int CursorX = Cursor.Position.X - pictureBox1.Location.X - 8 - this.Left;
             int CursorY = Cursor.Position.Y - pictureBox1.Location.Y - 30 - this.Top;
-            Graphics gr = pictureBox1.CreateGraphics();
-            gr.DrawLine(new Pen(Color.Violet, 10), CursorX - 5, CursorY, CursorX + 5, CursorY);
-            points.Add(new Point(CursorX * pictureBox1.Image.Width / pictureBox1.Width, CursorY * pictureBox1.Image.Height / pictureBox1.Height));
-            
+            gr.DrawEllipse(new Pen(Color.Violet, 3), CursorX - 3, CursorY - 3, 3, 3);
+            Dots.Add(new Point(CursorX - 3, CursorY - 3));
+            var OtstupY = pictureBox1.Height * pictureBox1.Image.Width / pictureBox1.Width - pictureBox1.Image.Height;
+            var OtstupX = pictureBox1.Width * pictureBox1.Image.Height / pictureBox1.Height - pictureBox1.Image.Width;
+            if (OtstupX < 0)
+                OtstupX = 0;
+            if (OtstupY < 0)
+                OtstupY = 0;
+            points.Add(new Point(CursorX * pictureBox1.Image.Width / pictureBox1.Width + OtstupX * (((float)CursorX / pictureBox1.Width) - 0.5), (CursorY) * pictureBox1.Image.Height / pictureBox1.Height+OtstupY*(((float)CursorY/pictureBox1.Height)-0.5)));
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            //var points = delaunay.GenP(Convert.ToInt32(textBox1.Text),pictureBox1.Width-10,pictureBox1.Height-10);
             Bitmap bitmap = new Bitmap(pictureBox1.Image);
-            var triangulation = delaunay.BowyerWatson(points, bitmap.Height - 10, bitmap.Width - 10);
+            //points = delaunay.GenP(1000, bitmap.Width - 1, bitmap.Height - 1);
+            var triangulation = delaunay.BowyerWatson(points, bitmap.Height -1, bitmap.Width - 1);
             pictureBox1.Refresh();
-
-                Bitmap outputY = new Bitmap(bitmap.Width, bitmap.Height);
-                Bitmap outputCb = new Bitmap(bitmap.Width, bitmap.Height);
-                Bitmap outputCr = new Bitmap(bitmap.Width, bitmap.Height);
-
-                for (int j = 0; j < bitmap.Height; j++)
-                    for (int i = 0; i < bitmap.Width; i++)
-                    {
-
-
-                        UInt32 pixel = (UInt32)(bitmap.GetPixel(i, j).ToArgb());
-                        double R = ((pixel & 0x00FF0000) >> 16);
-                        double G = ((pixel & 0x0000FF00) >> 8);
-                        double B = (pixel & 0x000000FF);
-                        double Y = R * .299000 + G * .587000 + B * .114000;
-                        double Cb = R * -.168736 + G * -.331264 + B * .500000 + 128;
-                        double Cr = 0.439 * R - 0.368 * G - 0.071 * B + 128;
-                        UInt32 newPixelY = 0xFF000000 | ((UInt32)Y << 16) | ((UInt32)Y << 8) | ((UInt32)Y);
-                        UInt32 newPixelCb = 0xFF000000 | ((UInt32)Cb) | ((UInt32)Y << 8);
-                        UInt32 newPixelCr = 0xFF000000 | ((UInt32)Cr << 16) | ((UInt32)Y << 8);
-                        outputY.SetPixel(i, j, Color.FromArgb((int)newPixelY));
-                        outputCb.SetPixel(i, j, Color.FromArgb((int)newPixelCb));
-                        outputCr.SetPixel(i, j, Color.FromArgb((int)newPixelCr));
-                    }
-                
-            DrawTriangulation(triangulation, pictureBox1.CreateGraphics(), outputY);
-            DrawTriangulation(triangulation, pictureBox1.CreateGraphics(), outputCb);
-            DrawTriangulation(triangulation, pictureBox1.CreateGraphics(), outputCr);
-            Bitmap outputBase = new Bitmap(outputY.Width, outputY.Height);
-            for (int j = 0; j < outputY.Height; j++)
-                for (int i = 0; i < outputY.Width; i++)
+            Bitmap outputY = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputCb = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputCr = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputY1 = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputCb1 = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputCr1 = new Bitmap(bitmap.Width, bitmap.Height);
+            Bitmap outputBase1 = new Bitmap(outputY.Width, outputY.Height);
+            for (int j = 0; j < bitmap.Height; j++)
+                for (int i = 0; i < bitmap.Width; i++)
                 {
-                    UInt32 pixelY = (UInt32)(outputY.GetPixel(i, j).ToArgb());
-                    UInt32 pixelCb = (UInt32)(outputCb.GetPixel(i, j).ToArgb());
-                    UInt32 pixelCr = (UInt32)(outputCr.GetPixel(i, j).ToArgb());
-                    double Y = ((pixelY & 0x00FF0000) >> 16);
-                    double Cb = ((pixelCb & 0x000000FF));
-                    double Cr = ((pixelCr & 0x00FF0000) >> 16);
-                    double R = Y + 1.4075 * (Cr - 128);
-                    double G = Y - 0.3455 * (Cb - 128) - 0.7169 * (Cr - 128);
-                    double B = Y + 1.779 * (Cb - 128);
-                    UInt32 newPixelBase = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
-                    outputBase.SetPixel(i, j, Color.FromArgb((int)newPixelBase));
+                    double R = bitmap.GetPixel(i, j).R;
+                    double G = bitmap.GetPixel(i, j).G;
+                    double B = bitmap.GetPixel(i, j).B;
+                    double Y = R * .299000 + G * .587000 + B * .114000;
+                    double Cb = R * -.168736 + G * -.331264 + B * .500000 + 128;
+                    double Cr = 0.5 * R - 0.418688 * G - 0.081312 * B + 128;
+                    UInt32 newPixelY = 0xFF000000 | ((UInt32)Y << 16) | ((UInt32)Y << 8) | ((UInt32)Y);
+                    UInt32 newPixelCb = 0xFF000000 | ((UInt32)Cb) | ((UInt32)Y << 8);
+                    UInt32 newPixelCr = 0xFF000000 | ((UInt32)Cr << 16) | ((UInt32)Y << 8);
+                    outputY.SetPixel(i, j, Color.FromArgb((int)newPixelY));
+                    outputCb.SetPixel(i, j, Color.FromArgb((int)newPixelCb));
+                    outputCr.SetPixel(i, j, Color.FromArgb((int)newPixelCr));
                 }
+            DrawTriangulation(triangulation, outputY, outputY1);
+            DrawTriangulation(triangulation, outputCb, outputCb1);
+            DrawTriangulation(triangulation, outputCr, outputCr1);
+            for (int j = 1; j < outputY1.Height; j++)
+                for (int i = 1; i < outputY1.Width; i++)
+                {
+                    double Y = outputY1.GetPixel(i, j).R;
+                    double Cb = outputCb1.GetPixel(i, j).B;
+                    double Cr = outputCr1.GetPixel(i, j).R;
+                    double A = outputY1.GetPixel(i, j).A;
+                    if (A==0)
+                    {
+                        Y = outputY1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1).R;
+                        Cb = outputCb1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1).B;
+                        Cr = outputCr1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1).R;
+                        outputY1.SetPixel(i, j, outputY1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1));
+                        outputCb1.SetPixel(i, j, outputCb1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1));
+                        outputCr1.SetPixel(i, j, outputCr1.GetPixel(i != 1 ? i - 1 : i, i != 1 ? j : j - 1));
+                    }
 
-            pictureBox1.Image = outputBase;
+                    double R = Y + 1.4072 * (Cr - 128);
+                    if (R > 255)
+                        R = 255;
+                    if (R < 0)
+                        R = 0;
+                    double G = Y - 0.34414 * (Cb - 128) - 0.71414 * (Cr - 128);
+                    if (G > 255)
+                        G = 255;
+                    if (G < 0)
+                        G = 0;
+                    double B = Y + 1.772 * (Cb - 128);
+                    if (B > 255)
+                        B = 255;
+                    if (B < 0)
+                        B = 0;
+                    UInt32 newPixelBase = 0xFF000000 | ((UInt32)R << 16) | ((UInt32)G << 8) | ((UInt32)B);
+                    outputBase1.SetPixel(i, j, Color.FromArgb((int)newPixelBase));
+                }
+            pictureBox12.Image = outputBase1;
         }
         
-        private void DrawTriangulation(IEnumerable<Triangle> triangulation, Graphics gr, Bitmap bitmap)
+        private void DrawTriangulation(IEnumerable<Triangle> triangulation, Bitmap bitmap, Bitmap bitmap1)
         {
             var edges = new List<Edge>();
+            Bitmap triangulat = new Bitmap(pictureBox1.Image);
+
             foreach (var triangle in triangulation)
             {
                 edges.Add(new Edge(triangle.Dots[0], triangle.Dots[1]));
                 edges.Add(new Edge(triangle.Dots[1], triangle.Dots[2]));
                 edges.Add(new Edge(triangle.Dots[2], triangle.Dots[0]));
-                BresenhamLine(triangle.Dots[0], triangle.Dots[1], bitmap);
-                BresenhamLine(triangle.Dots[1], triangle.Dots[2], bitmap);
-                BresenhamLine(triangle.Dots[2], triangle.Dots[0], bitmap);
-                PaintTriangle(BresenhamLine(triangle.Dots[0], triangle.Dots[1], bitmap),
-                BresenhamLine(triangle.Dots[1], triangle.Dots[2], bitmap), bitmap);
-                PaintTriangle(BresenhamLine(triangle.Dots[2], triangle.Dots[0], bitmap),
-                BresenhamLine(triangle.Dots[0], triangle.Dots[1], bitmap), bitmap);
-                PaintTriangle(BresenhamLine(triangle.Dots[1], triangle.Dots[2], bitmap),
-                BresenhamLine(triangle.Dots[1], triangle.Dots[0], bitmap), bitmap);
-                /*            var x1 = triangle.Dots[0].X;
-                               var x2 = triangle.Dots[1].X;
-                               var x3 = triangle.Dots[2].X;
-                               var y1 = triangle.Dots[0].Y;
-                               var y2 = triangle.Dots[1].Y;
-                               var y3 = triangle.Dots[2].Y;
-                               var x4 = (x1 + x2) / 2;
-                               var y4 = (y1 + y2) / 2;
-                               var x5 = (x1 + x3) / 2;
-                               var y5 = (y1 + y3) / 2;
-                               var a1 = x2 - x1;
-                               var b1 = y2 - y1;
-                               var c1 = x4 * (x2 - x1) + y4 * (y2 - y1);
-                               var a2 = x3 - x1;
-                               var b2 = y3 - y1;
-                               var c2 = x5 * (x3 - x1) + y5 * (y3 - y1);
-                               var xo = (c1 * b2 - c2 * b1) / (a1 * b2 - a2 * b1);
-                               var yo = (a1 * c2 - a2 * c1) / (a1 * b2 - a2 * b1);
-                               var r = Math.Sqrt(Math.Pow((x1 - xo), 2) + Math.Pow(y1 - yo, 2))*2;
-                               gr.DrawEllipse(new Pen(Color.Red), Convert.ToInt64(xo)-Convert.ToInt64(r)/2, Convert.ToInt64(yo)- Convert.ToInt64(r)/2, Convert.ToInt64(r), Convert.ToInt64(r));*/
-            }
+                bitmap1.SetPixel(Convert.ToInt32(triangle.Dots[0].X), Convert.ToInt32(triangle.Dots[0].Y), bitmap.GetPixel(Convert.ToInt32(triangle.Dots[0].X), Convert.ToInt32(triangle.Dots[0].Y)));
+                bitmap1.SetPixel(Convert.ToInt32(triangle.Dots[1].X), Convert.ToInt32(triangle.Dots[1].Y), bitmap.GetPixel(Convert.ToInt32(triangle.Dots[1].X), Convert.ToInt32(triangle.Dots[1].Y)));
+                bitmap1.SetPixel(Convert.ToInt32(triangle.Dots[2].X), Convert.ToInt32(triangle.Dots[2].Y), bitmap.GetPixel(Convert.ToInt32(triangle.Dots[2].X), Convert.ToInt32(triangle.Dots[2].Y)));
+                if (triangle.Edges[2].BrDots.Count != 0 && triangle.Edges[1].BrDots.Count != 0)
+                    
+                    PaintTriangle(BresenhamLine(triangle.Dots[0], triangle.Dots[1], bitmap, bitmap1), BresenhamLine(triangle.Dots[1], triangle.Dots[2], bitmap, bitmap1), bitmap, bitmap1);
 
-            foreach (var edge in edges)
-            {
-              //  gr.DrawLine(new Pen(Color.Black), Convert.ToInt64(edge.Point1.X), Convert.ToInt64(edge.Point1.Y), Convert.ToInt64(edge.Point2.X), Convert.ToInt64(edge.Point2.Y));
-               // gr.DrawLine(new Pen(Color.Violet, 10), new PointF(Convert.ToInt64(edge.Point1.X - 5), Convert.ToInt64(edge.Point1.Y - 5)), new PointF(Convert.ToInt64(edge.Point1.X + 5), Convert.ToInt64(edge.Point1.Y + 5)));
-               // gr.DrawLine(new Pen(Color.Violet, 10), new PointF(Convert.ToInt64(edge.Point2.X - 5), Convert.ToInt64(edge.Point2.Y - 5)), new PointF(Convert.ToInt64(edge.Point2.X + 5), Convert.ToInt64(edge.Point2.Y + 5)));
-                
-
+                if (Dots.Count != 0)
+                {
+                    BresenhamLineRed(triangle.Dots[0], triangle.Dots[1], triangulat);
+                    BresenhamLineRed(triangle.Dots[1], triangle.Dots[2], triangulat);
+                    BresenhamLineRed(triangle.Dots[2], triangle.Dots[0], triangulat);
+                }
             }
-            //Bitmap bitmap1 = new Bitmap(bitmap.Height, bitmap.Width);
-            //for (int i = 0; i < bitmap1.Height; i++)
-              //  for (int j = 0; j < bitmap1.Width; j++)
-                //    bitmap1.SetPixel(j, i, bitmap.GetPixel(i, j));
+            pictureBox2.Image = triangulat;
+            
         }
 
-        
-        List<Point> BresenhamLine(Point point1,Point point2,Bitmap bitmap)
+
+        List<Point> BresenhamLine(Point point1, Point point2, Bitmap bitmap, Bitmap bitmap1)
         {
             List<Point> vs = new List<Point>();
             if (point1 == point2)
                 return vs;
-            UInt32 start = (UInt32)bitmap.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).ToArgb();
-            UInt32 end = (UInt32)bitmap.GetPixel(Convert.ToInt32(point2.X), Convert.ToInt32(point2.Y)).ToArgb();
             var x0 = Convert.ToInt32(point1.Y);
-            var y0 = Convert.ToInt32(point1.X); 
+            var y0 = Convert.ToInt32(point1.X);
             var x1 = Convert.ToInt32(point2.Y);
             var y1 = Convert.ToInt32(point2.X);
-            var steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0); 
-            var buf = x0;                                                 
+            var check = true;
+            var steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
+            var buf = x0;
+            bool fal = false;
+            if (steep)
+            {
+                x0 = y0;
+                y0 = buf;
+                buf = x1;
+                x1 = y1;
+                y1 = buf;
+            }
+            if (x0 > x1)
+            {
+                fal = true;
+                buf = x0;
+                x0 = x1;
+                x1 = buf;
+                buf = y0;
+                y0 = y1;
+                y1 = buf;
+            }
+            double R = bitmap1.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).R;
+            double G = bitmap1.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).G;
+            double B = bitmap1.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).B;
+            double A = bitmap1.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).A;
+            double R1 = bitmap1.GetPixel(Convert.ToInt32(point2.X), Convert.ToInt32(point2.Y)).R;
+            double G1 = bitmap1.GetPixel(Convert.ToInt32(point2.X), Convert.ToInt32(point2.Y)).G;
+            double B1 = bitmap1.GetPixel(Convert.ToInt32(point2.X), Convert.ToInt32(point2.Y)).B;
+            double A1 = bitmap1.GetPixel(Convert.ToInt32(point1.X), Convert.ToInt32(point1.Y)).A;
+
+            if (A == 0 || A1 == 0)
+                return vs;
+
+            int dx = x1 - x0;
+            int dy = Math.Abs(y1 - y0);
+            int error = dx / 2;
+            int ystep = (y0 < y1) ? 1 : -1;
+            int y = y0;
+            double ColorstepR;
+            if (x1 != x0)
+                ColorstepR = (((R - R1) / (x1 - x0)));
+            else
+                ColorstepR = 0;
+            double ColorstepG;
+            if (x1 != x0)
+                ColorstepG = (((G - G1) / (x1 - x0)));
+            else
+                ColorstepG = 0;
+            double ColorstepB;
+            if (x1 != x0)
+                ColorstepB = (((B - B1) / (x1 - x0)));
+            else
+                ColorstepB = 0;
+            if (R + ColorstepR * (x1 - x0) > 255)
+                dx = x1 - x0;
+            bitmap.SetPixel(steep ? x0 : y, steep ? y : x0, fal ? Color.FromArgb((int)R1, (int)G1, (int)B1) :
+                    Color.FromArgb((int)R, (int)G, (int)B));
+            bitmap1.SetPixel(steep ? x0 : y, steep ? y : x0, fal ? Color.FromArgb((int)R1, (int)G1, (int)B1) :
+                    Color.FromArgb((int)R, (int)G, (int)B));
+            for (int x = x0 ; x < x1 ; x++)
+            {
+                bitmap.SetPixel(steep ? x : y, steep ? y : x, fal ? Color.FromArgb((int)(R1 + ColorstepR * (x - x0)), (int)(G1 + ColorstepG * (x - x0)), (int)(B1 + ColorstepB * (x - x0))) :
+                    Color.FromArgb((int)(R - ColorstepR * (x - x0)), (int)(G - ColorstepG * (x - x0)), (int)(B - ColorstepB * (x - x0))));
+                bitmap1.SetPixel(steep ? x : y, steep ? y : x, fal ? Color.FromArgb((int)(R1 + ColorstepR * (x - x0)), (int)(G1 + ColorstepG * (x - x0)), (int)(B1 + ColorstepB * (x - x0))) :
+                    Color.FromArgb((int)(R - ColorstepR * (x - x0)), (int)(G - ColorstepG * (x - x0)), (int)(B - ColorstepB * (x - x0))));
+
+                error -= dy;
+                if (error < 0)
+                {
+                    y += ystep;
+                    error += dx;
+                    check = true;
+                }
+                else
+                    check = false;
+                vs.Add(new Point(Convert.ToInt32(steep ? x : check?y-ystep:y), Convert.ToInt32(steep ? check? y-ystep:y : x)));
+            }
+            return vs;
+        }
+        List<Point> BresenhamLineRed(Point point1, Point point2, Bitmap bitmap)
+        {
+            List<Point> vs = new List<Point>();
+            if (point1 == point2)
+                return vs;
+            var x0 = Convert.ToInt32(point1.Y);
+            var y0 = Convert.ToInt32(point1.X);
+            var x1 = Convert.ToInt32(point2.Y);
+            var y1 = Convert.ToInt32(point2.X);
+            var steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
+            var buf = x0;
             if (steep)
             {
                 x0 = y0;
@@ -175,18 +260,12 @@ namespace triangle
             }
             int dx = x1 - x0;
             int dy = Math.Abs(y1 - y0);
-            int error = dx / 2; 
-            int ystep = (y0 < y1) ? 1 : -1; 
+            int error = dx / 2;
+            int ystep = (y0 < y1) ? 1 : -1;
             int y = y0;
-            UInt32 Colorstep;
-            if (x1 != x0)
-                Colorstep = Convert.ToUInt32((end - start) / (x1 - x0));
-            else
-                Colorstep = 0;
-            for (int x = x0; x < x1; x++)
+            for (int x = x0 + 1; x < x1 - 1; x++)
             {
-                bitmap.SetPixel(steep ? x : y, steep ? y : x, Color.FromArgb((int)(start+Colorstep*(x-x0))));
-                pictureBox1.Image = bitmap;
+                bitmap.SetPixel(steep ? x : y, steep ? y : x, Color.Red);
                 error -= dy;
                 if (error < 0)
                 {
@@ -197,8 +276,10 @@ namespace triangle
             }
             return vs;
         }
-        void PaintTriangle(List<Point> edge1, List<Point> edge2, Bitmap bitmap)
+        void PaintTriangle(List<Point> edge1, List<Point> edge2, Bitmap bitmap, Bitmap bitmap1)
         {
+            if (edge1.Count == 0 || edge2.Count == 0)
+                return;
             if (!(DistCalc(edge1.First(), edge2.First()) < DistCalc(edge1.First(), edge2.Last()) &&
                 DistCalc(edge1.First(), edge2.First()) < DistCalc(edge1.Last(), edge2.First()) &&
                 DistCalc(edge1.First(), edge2.First()) < DistCalc(edge1.Last(), edge2.Last())))
@@ -216,15 +297,78 @@ namespace triangle
                 }
             }
 
-                for (int i = edge1.Count - 1, j = edge2.Count - 1; i >= 0 && j >= 0; i--, j--)
+            for (int i = edge1.Count - 1, j = edge2.Count - 1; i >= 0 && j >= 0; i--, j--)
             {
-                BresenhamLine(edge1[i], edge2[j], bitmap);
+                BresenhamLine(edge1[i], edge2[j], bitmap, bitmap1);
             }
         }
         double DistCalc(Point FirstPoint, Point SecondPoint)
         {
             double scr= Math.Sqrt(Math.Pow(FirstPoint.X - SecondPoint.X, 2) + Math.Pow(FirstPoint.Y - SecondPoint.Y, 2)); ;
-            return scr;
+            return Math.Ceiling(scr);
+        }
+        private void openButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    pictureBox1.Image = new Bitmap(ofd.FileName);
+                    pictureBox2.Image = new Bitmap(ofd.FileName);
+                    pictureBox12.Image = new Bitmap(ofd.FileName);
+                }
+                catch 
+                {
+                    MessageBox.Show("Невозможно открыть выбранный файл", "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            int CursorX = Cursor.Position.X - pictureBox1.Location.X - 8 - this.Left;
+            int CursorY = Cursor.Position.Y - pictureBox1.Location.Y - 30 - this.Top;
+            Graphics gr = pictureBox1.CreateGraphics();
+            gr.DrawEllipse(new Pen(Color.Violet, 3), CursorX - 3, CursorY - 3, 3, 3);
+            Dots.Add(new Point(CursorX - 3, CursorY - 3));
+            points.Add(new Point(CursorX * pictureBox1.Image.Width / pictureBox1.Width , CursorY * pictureBox1.Image.Height / pictureBox1.Height));
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            pictureBox1.Width= Size.Width / 3 - 20;
+            pictureBox1.Height= Size.Height / 2 - 20;
+            pictureBox1.Location = new System.Drawing.Point(10, 0);
+
+            pictureBox2.Width = Size.Width / 3 - 20;
+            pictureBox2.Height = Size.Height / 2 - 20;
+            pictureBox2.Location = new System.Drawing.Point(Size.Width / 3 , 0);
+            pictureBox12.Width = Size.Width / 3 - 20;
+            pictureBox12.Height = Size.Height / 2 - 20;
+            pictureBox12.Location = new System.Drawing.Point(Size.Width * 2 / 3, 0);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            points.Clear();
+            Dots.Clear();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            pictureBox1.Width = Size.Width / 3 - 20;
+            pictureBox1.Height = Size.Height / 2 - 20;
+            pictureBox1.Location = new System.Drawing.Point(10, 0);
+            pictureBox2.Width = Size.Width / 3 - 20;
+            pictureBox2.Height = Size.Height / 2 - 20;
+            pictureBox2.Location = new System.Drawing.Point(Size.Width / 3, 0);
+            
+            pictureBox12.Width = Size.Width / 3 - 20;
+            pictureBox12.Height = Size.Height / 2 - 20;
+            pictureBox12.Location = new System.Drawing.Point(Size.Width * 2 / 3, 0);
         }
     }
 }

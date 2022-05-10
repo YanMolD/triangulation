@@ -7,6 +7,7 @@ namespace triangle
     public class Triangle
     {
         public Point[] Dots { get; } = new Point[3]; //вершины
+        public Edge[] Edges { get; } = new Edge[3];
         public Point CircC { get; private set; } //центр окружности
         public double RSc; //квадрат радиуса
 
@@ -38,12 +39,18 @@ namespace triangle
                 Dots[0] = point1;
                 Dots[1] = point3;
                 Dots[2] = point2;
+                Edges[0] = new Edge(point1, point3);
+                Edges[1] = new Edge(point3, point2);
+                Edges[2] = new Edge(point2, point1);
             }
             else
             {
                 Dots[0] = point1;
                 Dots[1] = point2;
                 Dots[2] = point3;
+                Edges[0] = new Edge(point1, point2);
+                Edges[1] = new Edge(point2, point3);
+                Edges[2] = new Edge(point3, point1);
             }
 
             Dots[0].NearbyTriangles.Add(this);
@@ -93,6 +100,17 @@ namespace triangle
             var d_squared = (point.X - CircC.X) * (point.X - CircC.X) +
                 (point.Y - CircC.Y) * (point.Y - CircC.Y);
             return d_squared < RSc;
+        }
+
+        public bool IsMCS(List<Point> points)
+        {
+            Point point1 = new Point(Dots[0]);
+            Point point2 = new Point(Dots[1]);
+            Point point3 = new Point(Dots[2]);
+            for (int i = 0; i < 4; i++)
+            if (points[i].Compare(point1) || points[i].Compare(point2) || points[i].Compare(point3)) 
+                return true;
+            return false;
         }
     }
 }
