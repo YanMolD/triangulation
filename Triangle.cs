@@ -101,16 +101,5 @@ namespace triangle
                 (point.Y - CircC.Y) * (point.Y - CircC.Y);
             return d_squared < RSc;
         }
-
-        public bool IsMCS(List<Point> points)
-        {
-            Point point1 = new Point(Dots[0]);
-            Point point2 = new Point(Dots[1]);
-            Point point3 = new Point(Dots[2]);
-            for (int i = 0; i < 4; i++)
-            if (points[i].Compare(point1) || points[i].Compare(point2) || points[i].Compare(point3)) 
-                return true;
-            return false;
-        }
     }
 }

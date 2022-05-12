@@ -8,7 +8,7 @@ namespace triangle
     {
         private double MaxX { get; set; }
         private double MaxY { get; set; }
-        private IEnumerable<Triangle> MCS;//минимальная выпуклая оболочка
+        public IEnumerable<Triangle> MCS;//минимальная выпуклая оболочка
 
         public List<Point> GenP(int amount, double maxX, double maxY)// генерация точек
         {
@@ -37,7 +37,7 @@ namespace triangle
         {
             MaxX = maxX;
             MaxY = maxY;
-            points = GenP(10000, maxX, maxY);
+            //points = GenP(10000, maxX, maxY);
             var point0 = new Point(0, 0);
             var point1 = new Point(0, MaxY);
             var point2 = new Point(MaxX, MaxY);
@@ -63,8 +63,15 @@ namespace triangle
 
                 foreach (var edge in polygon.Where(possibleEdge => possibleEdge.Point1 != point && possibleEdge.Point2 != point))
                 {
-                    var triangle = new Triangle(point, edge.Point1, edge.Point2);
-                    triangulation.Add(triangle);
+                    try
+                    {
+                        var triangle = new Triangle(point, edge.Point1, edge.Point2);
+                        triangulation.Add(triangle);
+                    }
+                    catch
+                    {
+
+                    }
                 }
             }
             return triangulation;
